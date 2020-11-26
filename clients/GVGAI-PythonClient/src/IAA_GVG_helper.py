@@ -26,15 +26,16 @@ class GVGAgent_Helper:
         self.serverDir = serverDir
         self.agentName = "sampleRandom.ZeldaAgent"
         self.shDir = ""
-        self.visuals = True
+        self.visuals = False
         self.gamesDir = serverDir
         self.gameFile = game_file
         self.levelFile = level_file
         self.serverJar = ""
-        self.server_scriptFile = scriptFile = os.path.join(self.shDir, "runServer_nocompile_python.sh " + str(self.gameId) + " " + str(self.serverDir) +
+        self.server_scriptFile = os.path.join("/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/utils/runServer_nocompile_python.sh " + str(self.gameId) + " " + str(self.serverDir) +
                                       " " + str(self.visuals))
     def start_server(self):
         print("Starting Server...")
-        #subprocess.Popen(self.server_scriptFile, shell=True)
+        subprocess.Popen(self.server_scriptFile, shell=True)
         self.ccomm = ClientComm(self.agentName)
         self.ccomm.startComm()
+        print("Finished start server")

@@ -7,6 +7,7 @@ from utils.Types import LEARNING_SSO_TYPE
 #import IPython
 import pprint
 import pickle
+from src.zelda_translator import Zelda_State,AbstractZeldaState
 pp = pprint.PrettyPrinter(indent=4)
 
 class Agent(AbstractPlayer):
@@ -19,8 +20,17 @@ class Agent(AbstractPlayer):
         self.has_key = False
         self.sso_traces = []
         self.plan = []
+        self.current_trace = []
         self.step = 0
-        self.max_steps = 10
+        self.max_steps = 30
+        self.trace_recorder_file = "test_trace" 
+        try:
+            with open(self.trace_recorder_file,"rb") as f:
+                self.old_traces = pickle.load(f)
+        except IOError:
+            self.old_traces = []
+            pass
+
         try:
             with open(self.plan_file,"rb") as f:
                 self.plan = pickle.load(f)
@@ -57,7 +67,6 @@ class Agent(AbstractPlayer):
             action = sso.availableActions[index]
             print("Selecting random action")
             self.step+=1
-            
         else:    
             # if self.step>=len(self.plan):
             #     print("Something is wrong here in agent action")
@@ -67,10 +76,32 @@ class Agent(AbstractPlayer):
             try:
                 action = self.plan[self.step-1]
                 self.step+=1
-                print("Running plan")
+                #print("Running plan")
             except IndexError:
                 print("Whoops")
-            print(action)
+            #print(action)
+        self.current_trace.append((sso,action))
+        current_zstate = Zelda_State(sso)
+        previous_zstate = Zelda_State(self.current_trace[-1][0])
+        previous_action = self.current_trace[-1][1]
+        #modded_traces.append((zstate,pair[1]))
+        # for k in previous_zstate.state.keys():
+        #     if previous_zstate.state[k]!=current_zstate.state[k]:
+        #         print("Key: "+k)
+        #         print("value1:"+str(previous_zstate.state[k]))
+        #         print("value2:"+str(zstate.state[k]))
+        #         print("transition action:"+str(previous_action))
+        # #print(sso.availableActions)
+        dirs = {
+            'w':-1,
+            'a':1,
+            's':3,
+            'd':2,
+            'e':0
+        }
+        #action = sso.availableActions[dirs[raw_input()]]
+        if self.step>self.max_steps:
+            action = 'ACTION_ESCAPE'
         return action
     
     """
@@ -86,4 +117,8 @@ class Agent(AbstractPlayer):
     * chosen will be ignored, and the game will play a random one instead.
     """
     def result(self, sso, elapsedTimer):
+        print("Stored New Trace")
+        self.old_traces.append(self.current_trace)
+        with open(self.trace_recorder_file,'w') as f:
+            pickle.dump(self.old_traces,f)
         return random.randint(0, 2)

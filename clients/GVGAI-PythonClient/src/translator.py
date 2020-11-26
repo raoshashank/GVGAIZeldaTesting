@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
 import socket
-import IPython
-
-
-
 '''
     Define predicates for Zelda:
 '''
@@ -19,7 +15,7 @@ class Translator:
         self.game_name = game_name
         self.game_file = games_path+'/'+game_name+'".txt'
         self.level_file = games_path+'/'+game_name+"_lvl"+str(level_num)+'.txt'
-        self.predicates = []
+        self.states = []
         self.HOST = "localhost"
         self.PORT = 8080
             

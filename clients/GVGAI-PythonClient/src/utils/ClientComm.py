@@ -31,6 +31,8 @@ class ClientComm:
         self.player = None
         self.global_ect = None
         self.lastSsoType = LEARNING_SSO_TYPE.JSON
+        self.max_actions = 20
+        self.action_count = 0
 
     def startComm(self):
         self.io.initBuffers()
@@ -84,14 +86,16 @@ class ClientComm:
                 self.result()
 
             elif self.sso.phase == "ACT":
+                self.action_count+=1
                 self.sso.phase = Phase.ACT
                 self.act()
-
+                
             elif self.sso.phase == Phase.ACT:
                 self.act()
 
             elif self.sso.phase == Phase.FINISH:
                 line = None
+                self.result()
 
             elif self.sso.phase == "FINISH":
                 line = None
@@ -298,19 +302,16 @@ class ClientComm:
 
     def result(self):
         ect = ElapsedCpuTimer()
-
         if not self.global_ect.exceededMaxTime():
             ect = self.global_ect.copy()
         else:
             ect.setMaxTimeMillis(CompetitionParameters.EXTRA_LEARNING_TIME)
-
         nextLevel = self.player.result(self.sso, ect.copy())
         # print "Result of a game at " + str(ect.remainingTimeMillis()) + "ms to the end."
         self.lastSsoType = self.player.lastSsoType
         if ect.exceededMaxTime():
             self.io.writeToServer(self.lastMessageId, "END_OVERSPENT", self.LOG)
         else:
-
             if self.global_ect.exceededMaxTime():
                 end_message = "END_VALIDATION" if self.sso.isValidation else "END_TRAINING"
                 self.io.writeToServer(self.lastMessageId, end_message, self.LOG)

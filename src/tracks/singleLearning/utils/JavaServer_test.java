@@ -129,7 +129,7 @@ public class JavaServer_test {
         }
         // This plays a training round for a specified game.
         System.out.println("[GAME] Game idx:" + gameIdx + " game name " + games[gameIdx]);
-       LearningMachine.runOneGame(game, level_files[0], true,cmd, null,0);
+       LearningMachine.runOneGame(game, level_files[0], visuals,cmd, null,0);
 
 
 

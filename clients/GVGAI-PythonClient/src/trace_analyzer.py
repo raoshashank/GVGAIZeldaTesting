@@ -10,6 +10,7 @@ sys.path.append("src/utils")
 sys.path.append("./utils")
 from IAA_GVG_helper import GVGAgent_Helper
 from zelda_translator import *
+#import IPython
 
 level_file = "/home/raoshashank/GVGAI-master/examples/gridphysics/zelda_lvl0.txt"
 game_file  = "/home/raoshashank/GVGAI-master/examples/gridphysics/zelda.txt"
@@ -31,6 +32,16 @@ try:
         test_trace = pickle.load(f)
 except IOError:
     pass
+new_test_traces = []
+for run in test_trace:
+    sas_trace = []
+    for sa1,sa2 in zip(run,run[1:]):
+        if sa1[1]!='ACTION_ESCAPE':
+            sas_trace.append([sa1[0],sa1[1],sa2[0]])
+    new_test_traces.append(sas_trace)
+#IPython.embed()
+
+
 # modded_traces = []
 # previous_zstate = None
 # for pair in test_trace:
@@ -51,7 +62,3 @@ except IOError:
 #                     print("transition action:"+str(pair[1]))
 #     print("===============")
 #     previous_zstate = zstate
-num_traces = 5
-for i in range(num_traces):
-    Zelda_Env_Helper.start_server()
-    print("Finished Tester")

@@ -100,13 +100,13 @@ public class LearningMachine {
 
         Player[] players = new Player[]{player};
         if (visuals)
-            score = toPlay.playGame(players, randomSeed, true, 0);
+            score = toPlay.playGame(players, randomSeed, false, 0);
         else
             score = toPlay.runGame(players, randomSeed);
 
         //Finally, when the game is over, we need to tear the player down.
         LearningMachine.tearPlayerDown(player, toPlay);
-
+        player.finishPlayerCommunication();
         return score;
     }
 
