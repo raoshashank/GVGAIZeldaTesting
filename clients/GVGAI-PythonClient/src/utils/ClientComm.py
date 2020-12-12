@@ -80,9 +80,11 @@ class ClientComm:
 
             elif self.sso.phase == "ABORT":
                 self.sso.phase = Phase.ABORT
+                print("Aborted")
                 self.result()
 
             elif self.sso.phase == Phase.ABORT:
+                print("Aborted")
                 self.result()
 
             elif self.sso.phase == "ACT":
@@ -95,6 +97,9 @@ class ClientComm:
 
             elif self.sso.phase == Phase.FINISH:
                 line = None
+                print(self.sso.gameWinner)
+                print(self.sso.isAvatarAlive)
+                print("Finished")
                 self.result()
 
             elif self.sso.phase == "FINISH":

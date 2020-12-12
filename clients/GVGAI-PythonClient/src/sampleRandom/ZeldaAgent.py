@@ -23,7 +23,9 @@ class Agent(AbstractPlayer):
         self.current_trace = []
         self.step = 0
         self.max_steps = 30
-        self.trace_recorder_file = "test_trace" 
+        self.max_score = 0
+        self.trace_recorder_file = "/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/test_trace" 
+        self.actionFile = "/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/actionFile" #this is used to read the winner state after game terminates
         try:
             with open(self.trace_recorder_file,"rb") as f:
                 self.old_traces = pickle.load(f)
@@ -62,6 +64,14 @@ class Agent(AbstractPlayer):
      """
 
     def act(self, sso, elapsedTimer):
+        if sso.avatarOrientation == [-1,0]:
+            print('WEST')
+        if sso.avatarOrientation == [1,0]:
+            print('EAST')
+        if sso.avatarOrientation == [0,-1]:
+            print('NORTH')
+        if sso.avatarOrientation == [0,1]:
+            print('SOUTH')
         if (len(self.plan)==0 and self.step<self.max_steps) or self.step>=len(self.plan):
             index = random.randint(0, len(sso.availableActions) - 1)
             action = sso.availableActions[index]
@@ -80,10 +90,6 @@ class Agent(AbstractPlayer):
             except IndexError:
                 print("Whoops")
             #print(action)
-        self.current_trace.append((sso,action))
-        current_zstate = Zelda_State(sso)
-        previous_zstate = Zelda_State(self.current_trace[-1][0])
-        previous_action = self.current_trace[-1][1]
         #modded_traces.append((zstate,pair[1]))
         # for k in previous_zstate.state.keys():
         #     if previous_zstate.state[k]!=current_zstate.state[k]:
@@ -97,11 +103,27 @@ class Agent(AbstractPlayer):
             'a':1,
             's':3,
             'd':2,
-            'e':0
+            'e':0,
         }
-        #action = sso.availableActions[dirs[raw_input()]]
-        if self.step>self.max_steps:
-            action = 'ACTION_ESCAPE'
+        input_action = str.lower(input())
+        if input_action!='q' and input_action!='x':
+            while True:
+                try:
+                    action = sso.availableActions[dirs[input_action]]
+                    break
+                except KeyError as e:
+                    pass   
+        elif input_action=='q':
+            action = 'ABORT'
+        else:
+            action = 'ACTION_NIL'
+        # if self.step>self.max_steps:
+        #     action = 'ACTION_ESCAPE'
+        print(action)
+        self.current_trace.append((sso,action))
+        current_zstate = Zelda_State(sso)
+        previous_zstate = Zelda_State(self.current_trace[-1][0])
+        previous_action = self.current_trace[-1][1]
         return action
     
     """
@@ -118,7 +140,17 @@ class Agent(AbstractPlayer):
     """
     def result(self, sso, elapsedTimer):
         print("Stored New Trace")
+        #if self.current_trace[-1][0].
+        with open(self.actionFile,"r") as f:
+            lines = f.readlines()
+        winner = int(lines[0].split(" ")[1])
+        if winner == 1:
+            dummy_sso = self.current_trace[-1][0]
+            dummy_sso.gameWinner = 'PLAYER_WINS'
+            self.current_trace.append((dummy_sso,'ACTION_ESCAPE'))
         self.old_traces.append(self.current_trace)
-        with open(self.trace_recorder_file,'w') as f:
+        with open(self.trace_recorder_file,'wb') as f:
             pickle.dump(self.old_traces,f)
         return random.randint(0, 2)
+#0 1 2.0 23 :seed,winner,score,tick
+#0 0 0.0 5 : seed,winner(1 for player wins, 0 for terminate),score,tick  

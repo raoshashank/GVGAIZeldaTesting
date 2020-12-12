@@ -24,7 +24,7 @@ public class JavaServer_test {
         String clientDir = ".";
         String gamesDir = ".";
         //Other settings
-        boolean visuals = false;
+        boolean visuals = true;
         /** Get arguments */
         Map<String, List<String>> params = new HashMap<>();
         List<String> options = null;
@@ -129,7 +129,7 @@ public class JavaServer_test {
         }
         // This plays a training round for a specified game.
         System.out.println("[GAME] Game idx:" + gameIdx + " game name " + games[gameIdx]);
-       LearningMachine.runOneGame(game, level_files[0], visuals,cmd, null,0);
+       LearningMachine.runOneGame(game, level_files[0], visuals,cmd,"/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/actionFile",0);
 
 
 

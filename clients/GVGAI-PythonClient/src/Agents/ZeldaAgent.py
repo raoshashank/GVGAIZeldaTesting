@@ -11,7 +11,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 class Agent(AbstractPlayer):
     def __init__(self):
-        super.__init__(self)
+        super().__init__(self)
         self.lastSsoType = LEARNING_SSO_TYPE.JSON
         self.plan_file = "" #Add file to read plan from
         self.comm = ClientComm(None)

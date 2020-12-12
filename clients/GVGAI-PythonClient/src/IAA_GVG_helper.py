@@ -26,7 +26,7 @@ class GVGAgent_Helper:
         self.serverDir = serverDir
         self.agentName = "sampleRandom.ZeldaAgent"
         self.shDir = ""
-        self.visuals = False
+        self.visuals = True
         self.gamesDir = serverDir
         self.gameFile = game_file
         self.levelFile = level_file

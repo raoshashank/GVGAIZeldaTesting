@@ -33,7 +33,7 @@ BasicGame
     goal withkey  > killSprite scoreChange=1
     enemy sword > killSprite scoreChange=2
     enemy enemy > stepBack
-    avatar enemy > killSprite scoreChange=-1
+    avatar enemy > stepBack scoreChage = -1
     nokey key     > transformTo stype=withkey scoreChange=1 killSecond=True
 
   TerminationSet
