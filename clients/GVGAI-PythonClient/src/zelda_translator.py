@@ -90,6 +90,7 @@ class Zelda_Translator(Translator):
     def create_level_from_state(self,zelda_state,level_file):
         '''
             Given zelda state, create GVG level
+            YET TO BE TESTED
         '''
         level_text = ""
         for i in range(zelda_state.grid_height): 
@@ -497,7 +498,7 @@ class Zelda_Translator(Translator):
         agent_model ={}
         init_state = None
         try:
-            with open("test_trace","rb") as f:
+            with open("files/test_trace","rb") as f:
                 temp_traces = pickle.load(f)
             sso_state = temp_traces[-1][0][0]
             state = self.abstract_state(self.from_sso(sso_state))

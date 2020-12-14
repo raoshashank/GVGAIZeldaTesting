@@ -1,20 +1,23 @@
 import random
 import sys
+import sys
+sys.path.append("./src")
+sys.path.append("./utils")
 from AbstractPlayer import AbstractPlayer
 from Types import *
 from ClientComm import ClientComm
-from utils.Types import LEARNING_SSO_TYPE
+from Types import LEARNING_SSO_TYPE
 #import IPython
 import pprint
 import pickle
-from src.zelda_translator import Zelda_State,AbstractZeldaState
+from zelda_translator import Zelda_State,AbstractZeldaState
 pp = pprint.PrettyPrinter(indent=4)
 
 class Agent(AbstractPlayer):
     def __init__(self):
         AbstractPlayer.__init__(self)
         self.lastSsoType = LEARNING_SSO_TYPE.JSON
-        self.plan_file = "/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/plan.pkl" #Add file to read plan from
+        self.plan_file = "files/plan.pkl" #Add file to read plan from
         self.comm = ClientComm(None)
         self.count = 0
         self.has_key = False
@@ -24,8 +27,8 @@ class Agent(AbstractPlayer):
         self.step = 0
         self.max_steps = 30
         self.max_score = 0
-        self.trace_recorder_file = "/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/test_trace" 
-        self.actionFile = "/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/actionFile" #this is used to read the winner state after game terminates
+        self.trace_recorder_file = "files/test_trace" 
+        self.actionFile = "files/actionFile" #this is used to read the winner state after game terminates
         try:
             with open(self.trace_recorder_file,"rb") as f:
                 self.old_traces = pickle.load(f)

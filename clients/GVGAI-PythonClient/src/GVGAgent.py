@@ -1,10 +1,14 @@
-from src.zelda_translator import *
-from src.ZeldaStates import *
+from zelda_translator import *
+from ZeldaStates import *
 import pickle
 import uuid
 class GVGAgent():
     def __init__(self):
         self.translator = Zelda_Translator()
+        self.random_states_file = "files/random_states"
+        self.traces_file = "files/test_trace"
+        self.high_actions_dict = "files/high_actions_dict"
+        self.high_traces = "files/high_traces"
 
     def run_query(self,query):
         if len(self.translator.high_actions)!=0:
@@ -25,7 +29,7 @@ class GVGAgent():
                 abs_random_states.append(self.translator.abstract_state(s))
             random_states = abs_random_states
         if save:
-            with open("random_states","wb") as f:
+            with open(self.random_states_file,"wb") as f:
                 pickle.dump(random_states,f)
         return random_states
     
@@ -44,7 +48,9 @@ class GVGAgent():
             print("Actions not stored yet")
             return False
 
-    def load_actions(self,file="test_trace"):
+    def load_actions(self,file=None):
+        if file == None:
+            file = self.traces_file
         try:
             with open(file,'rb') as f:
                 test_trace = pickle.load(f)
@@ -92,9 +98,11 @@ class GVGAgent():
                     high_level_actions[action_id] = [abs_s1,abs_s2,]
                     abs_trace.append((abs_s1,action_id,abs_s2))
             high_level_traces.append(abs_trace)
-        with open("high_actions_dict","wb") as f:
+        
+        with open(self.high_actions_dict,"wb") as f:
             pickle.dump(high_level_actions,f)
-        with open("high_traces","wb") as f:
+
+        with open(self.high_traces,"wb") as f:
             pickle.dump(high_level_traces,f)
         self.translator.update_high_actions(high_level_actions)
         print("Saved High-level actions as traces")

@@ -19,7 +19,7 @@ import os
 from priority_queue import PriorityQueue
 import time
 #from src.ZeldaStates import is_invalid
-from src.zelda_translator import plot_state
+#from zelda_translator import plot_state
 
 
 def build_solution(best_path, current_node):

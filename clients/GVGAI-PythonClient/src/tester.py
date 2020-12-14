@@ -5,15 +5,15 @@ import sys
 import traceback
 import argparse
 import pickle
-sys.path.append("./src")
-sys.path.append("src/utils")
+#sys.path.append("./src")
+#sys.path.append("src/utils")
 sys.path.append("./utils")
 from IAA_GVG_helper import GVGAgent_Helper
 from zelda_translator import *
-from src.ZeldaStates import *
+from ZeldaStates import *
 from search import *
 import uuid
-from src.GVGAgent import GVGAgent
+from GVGAgent import GVGAgent
 
 def zelda_agent():
     level_file = "/home/raoshashank/GVGAI-master/examples/gridphysics/zelda_lvl0.txt"
@@ -59,8 +59,6 @@ def test_search(trace,agent):
         action_list,total_nodes_expanded = translator.plan_to_state(s1,s2,"astar")
         print("Plan:"+str(action_list))
 
-
-
 def test_get_successor(state1):
     translator = Zelda_Translator()
     return translator.get_successor(state1)
@@ -83,8 +81,6 @@ def save_action_dict():
     game_file  = "/home/raoshashank/GVGAI-master/examples/gridphysics/zelda.txt"
     Zelda_Env_Helper = GVGAgent_Helper(90,level_file,game_file)
     sso_plan = []
-    plan_file = "/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/plan.pkl" 
-    sso_file = "/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/all_actions.pkl"
 
     with open(sso_file,"rb") as f:
         sso =  pickle.load(f)
@@ -93,7 +89,7 @@ def save_action_dict():
     print(all_actions)
 
     try:
-        with open("test_trace",'rb') as f:
+        with open("files/test_trace",'rb') as f:
             test_trace = pickle.load(f)
     except IOError:
         pass
@@ -158,34 +154,34 @@ def test_random_generator(n=5):
 
 if __name__ == '__main__':
     '''    
-    #success,plan_length,final_state = test_plan_run(trace,high_level_actions) #Next check for impossible plans
-    #print(success)
-    #print(plan_length)
-    #print(len(trace))
-    #print(plot_state(final_state))
-    #IPython.embed()
-    #test_set_GVG_state(trace[-1][0])
-    state1 = test_trace[-1][8][0]
-    state2 = test_trace[-1][10][0]
-    all_actions = state1.availableActions
-    zstate1 = Zelda_State(state1)
-    zstate2 = Zelda_State(state2)
-    #print(plot_state(zstate1))
-    #print(plot_state(zstate2))
-    test_search(zstate1,zstate2)
-    p = 0
-    for i,sa in enumerate(test_trace[-1]):
-        #zstate = test_get_successor(zstate,sa[1])
-        if i < 2:
-            p = 2
-        else:
-            p = i
-        s1 = Zelda_State(test_trace[-1][p-2][0])
-        s2 = Zelda_State(test_trace[-1][i][0])
-        test_search(s1,s2)
-        #print("Resulting State from action "+str(sa[1]))
+        #success,plan_length,final_state = test_plan_run(trace,high_level_actions) #Next check for impossible plans
+        #print(success)
+        #print(plan_length)
+        #print(len(trace))
+        #print(plot_state(final_state))
+        #IPython.embed()
+        #test_set_GVG_state(trace[-1][0])
+        state1 = test_trace[-1][8][0]
+        state2 = test_trace[-1][10][0]
+        all_actions = state1.availableActions
+        zstate1 = Zelda_State(state1)
+        zstate2 = Zelda_State(state2)
+        #print(plot_state(zstate1))
+        #print(plot_state(zstate2))
+        test_search(zstate1,zstate2)
+        p = 0
+        for i,sa in enumerate(test_trace[-1]):
+            #zstate = test_get_successor(zstate,sa[1])
+            if i < 2:
+                p = 2
+            else:
+                p = i
+            s1 = Zelda_State(test_trace[-1][p-2][0])
+            s2 = Zelda_State(test_trace[-1][i][0])
+            test_search(s1,s2)
+            #print("Resulting State from action "+str(sa[1]))
     '''        
-    zelda_agent()
+    #zelda_agent()
     agent = GVGAgent()
     #generate random states
     random_states = agent.generate_random_states(5,save=True,abstract = True)
@@ -198,7 +194,7 @@ if __name__ == '__main__':
     #save actions in dict using traces and abstraction
     agent.load_actions()
     #select a trace and run the plan from initial state as a query
-    with open("high_traces",'rb') as f:
+    with open("files/high_traces",'rb') as f:
         test_traces = pickle.load(f)
     # for s1,a,s2 in test_traces[0]:
     #     print(plot_state(s1))

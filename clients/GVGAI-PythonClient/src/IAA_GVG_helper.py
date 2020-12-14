@@ -4,12 +4,10 @@ import subprocess
 import sys
 import traceback
 import argparse
-sys.path.append("src/utils")
+#sys.path.append("src/utils")
 sys.path.append("./utils")
-sys.path.append("./Agents")
-from CompetitionParameters import CompetitionParameters
-
-from ClientComm import ClientComm
+sys.path.append("./agent")
+from utils.ClientComm import ClientComm
 
 '''
     Java File which runs in server: /home/raoshashank/GVGAI-master/src/tracks/singleLearning/utils/JavaServer_test.java
@@ -24,14 +22,14 @@ class GVGAgent_Helper:
     def __init__(self,game_id,level_file,game_file,serverDir= '../../..'):
         self.gameId = game_id
         self.serverDir = serverDir
-        self.agentName = "sampleRandom.ZeldaAgent"
+        self.agentName = "agent.ZeldaAgent"
         self.shDir = ""
         self.visuals = True
         self.gamesDir = serverDir
         self.gameFile = game_file
         self.levelFile = level_file
         self.serverJar = ""
-        self.server_scriptFile = os.path.join("/home/raoshashank/GVGAI-master/clients/GVGAI-PythonClient/src/utils/runServer_nocompile_python.sh " + str(self.gameId) + " " + str(self.serverDir) +
+        self.server_scriptFile = os.path.join("utils/runServer_nocompile_python.sh " + str(self.gameId) + " " + str(self.serverDir) +
                                       " " + str(self.visuals))
     def start_server(self):
         print("Starting Server...")
