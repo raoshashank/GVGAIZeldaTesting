@@ -114,8 +114,8 @@ def search(init_state, goal_state, helper, algorithm, time_limit=float("inf")):
         
         # If the current state is a goal state, we are done and need to
         # reconstruct the best path to the goal.
-        print("-----")
-        print(plot_state(current_state))
+        #print("-----")
+        #print(plot_state(current_state))
         if helper.is_goal_state(current_state, goal_state):
             action_list = build_solution(best_path, current_node)
             break

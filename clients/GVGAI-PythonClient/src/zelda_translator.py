@@ -139,28 +139,28 @@ class Zelda_Translator(Translator):
                     random_state.state['below'].append([[cell_name,cell_up]])        
         
         num_monsters = np.random.randint(2,5)
-        num_blocked_cells = np.random.choice(range(int(5 * c * r / 10)))
+        num_blocked_cells = np.random.choice(range(int(5 * c * r / 10)),replace = False)
         all_cells = list(random_state.objects.keys())
 
         #walls
-        blocked_cells = np.random.choice(all_cells, num_blocked_cells)
+        blocked_cells = np.random.choice(all_cells, num_blocked_cells,replace = False)
         all_cells = list(set(tuple(all_cells)).difference(set(tuple(blocked_cells))))
         #monster
-        monster_positions = np.random.choice(all_cells, num_monsters)
+        monster_positions = np.random.choice(all_cells, num_monsters,replace = False)
         all_cells = list(set(tuple(all_cells)).difference(set(tuple(monster_positions))))
         monster_mapping = {}
         for i in range(len(monster_positions)):
             monster_mapping[monster_positions[i].replace('cell','monster')] = monster_positions[i]
         #door
-        door_position = np.random.choice(all_cells)
+        door_position = np.random.choice(all_cells,replace = False)
         all_cells.remove(door_position)
         #key
-        key_position = np.random.choice(all_cells)
+        key_position = np.random.choice(all_cells,replace = False)
         all_cells.remove(key_position)
         #player
-        player_position = np.random.choice(all_cells)
+        player_position = np.random.choice(all_cells,replace = False)
         all_cells.remove(player_position)
-        random_state.monster_mapping = monster_mapping 
+        #random_state.monster_mapping = monster_mapping 
         random_state.state['player_orientation'] =['EAST']
         [random_state.state['monster'].append([k,v]) for k,v in monster_mapping.items()]
         [random_state.state['wall'].append(blocked_cells[i]) for i in range(len(blocked_cells))]
@@ -328,6 +328,7 @@ class Zelda_Translator(Translator):
         doors = zstate.state['is_door'] #There can be multiple doors
         keys = zstate.state['is_key']    #There can be multiple keys
         if len(zstate.state['is_player'])>1:
+            print("more than one player!")
             return False    
         player = zstate.state['is_player'][0]
         '''
@@ -346,25 +347,31 @@ class Zelda_Translator(Translator):
                             player_and_door = True
                             continue
                 if not player_and_door:
+                    print("multiple cell assignments")
                     return False
                 else:
+                    print("multiple cell assignments")
                     return False
         '''
             match monster_alive, is_monster and at(monster,_)
         '''         
         if len(set(tuple(zstate.state['monster_alive'])).difference(set(tuple(zstate.state['is_monster']))))>0:
+            print("Monster problem")
             return False
         for pair in zstate.state['at']:
             if pair[0] in monsters:
                 if pair[0] not in zstate.state['monster_alive']:
+                    print("Monster problem")
                     return False
 
         #Add check if key is missing, has_key should be true
         
         if True in zstate.state['escaped']:
             if alive_monsters>0:
+                print("Escape problem")
                 return False
             if True not in zstate.state['has_key']:
+                print("Escape problem")
                 return False
 
         return True   
@@ -433,7 +440,7 @@ class Zelda_Translator(Translator):
         abs_state.state['wall'] = low_state.state['wall']
         abs_state.state['escaped'] = low_state.state['escaped']
         try:
-            abs_state.state['at'].append(('player',low_state.state['player']))
+            abs_state.state['at'].append(('player',low_state.state['player'][0]))
             abs_state.objects['player']='sprite'
             abs_state.state['is_player'].append('player')
         except IndexError:
@@ -493,7 +500,7 @@ class Zelda_Translator(Translator):
             with open("test_trace","rb") as f:
                 temp_traces = pickle.load(f)
             sso_state = temp_traces[-1][0][0]
-            state = AbstractZeldaState(self.from_sso(sso_state))
+            state = self.abstract_state(self.from_sso(sso_state))
             for key,val in state.objects.items():
                 objects[val].append(key)
         except IOError:
@@ -528,17 +535,14 @@ class Zelda_Translator(Translator):
         
         return action_parameters, predTypeMapping, agent_model, abstract_model, objects, None , None, "zelda_GVG"
 
-    def refine_abstract_state(abstract_state):
+    def refine_abstract_state(self,abstract_state):
         '''
-            This will only be used for setting initial state for a query
-            TODO:
-                add to 'key' and 'door' predicates -- DONE -- 
-                
+            Concretize an input abstract state
         '''
+        refined_state = Zelda_State()        
         for obj in abstract_state.objects:
             if abstract_state.objects[obj] in ['location']:
-                self.objects[obj]=abstract_state.objects[obj]
-        refined_state = Zelda_State()        
+                refined_state.objects[obj]=abstract_state.objects[obj]
         refined_state.state['has_key'].append(abstract_state.state['has_key'][0])
         refined_state.state['wall'] = abstract_state.state['wall']
         refined_state.state['leftOf'] = abstract_state.state['leftOf']
@@ -581,11 +585,11 @@ class Zelda_Translator(Translator):
                 below(?cell1,?cell2)   #cell1 is below cell2
                 monster_alive()                    
         '''
-        state = ZeldaStates()
+        state = Zelda_State()
         state.grid_width = len(sso.observationGrid)
         state.grid_height = len(sso.observationGrid[0]) ##(i,j) is column i, row jprint_grid = np.zeros([len(sso.observationGrid),len(sso.observationGrid[0])])
         sword_at = None
-        monster_id = 0
+        #monster_id = 0
         player_won = 0
         player = 0
         if sso.gameWinner == 'PLAYER_WINS':
@@ -616,17 +620,17 @@ class Zelda_Translator(Translator):
                         pass
                     else:
                         if IDs[sso.observationGrid[i][j][0].itype] == 'MONSTER':  
-                            if state.trace_id==0:
+                            #if state.trace_id==0:
                                 #assign monster numbers here itself
-                                state.state['monster'].append(['monster'+str(monster_id),cell_name])
-                                state.monster_mapping[cell_name] = 'monster'+str(monster_id)
-                                monster_id+=1
-                                #state.objects['monster'+str(monster_id)]='sprite'
-                            else:
-                                try:
-                                    state.state['monster'].append([state.monster_mapping[cell_name],cell_name])
-                                except KeyError:
-                                    print("Monster not present in mapping!")
+                            state.state['monster'].append([cell_name.replace('cell','monster'),cell_name])
+                            #state.monster_mapping[cell_name] = 'monster'+str(monster_id)
+                            #monster_id+=1
+                            #state.objects['monster'+str(monster_id)]='sprite'
+                            #else:
+                            #    try:
+                            #        state.state['monster'].append([state.monster_mapping[cell_name],cell_name])
+                            #    except KeyError:
+                            #        print("Monster not present in mapping!")
                         if IDs[sso.observationGrid[i][j][0].itype] == 'WALL':
                             state.state['wall'].append(cell_name)
                         if IDs[sso.observationGrid[i][j][0].itype] == 'PLAYER':

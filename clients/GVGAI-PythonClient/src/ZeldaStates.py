@@ -92,7 +92,7 @@ class Zelda_State:
     def __hash__(self):
         return hash(str(self))
     
-    def __init__(self,monster_mapping={},trace_id=0):
+    def __init__(self):
         self.monster_id = 11
         self.wall_id = 0
         self.player_id = 7
@@ -102,8 +102,8 @@ class Zelda_State:
         self.grid_height = 4 #assign dynamically later
         self.grid_width = 4 #assign dynamically later
         self.objects = {}#types: location(cells) ONLY
-        self.monster_mapping=monster_mapping #key:monster name, value: original monster-location
-        self.trace_id=trace_id
+        #self.monster_mapping=monster_mapping #key:monster name, value: original monster-location
+        #self.trace_id=trace_id
         self.state = {
             'wall':[],
             'player':[],

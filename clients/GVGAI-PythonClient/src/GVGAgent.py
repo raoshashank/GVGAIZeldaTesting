@@ -1,6 +1,7 @@
 from src.zelda_translator import *
 from src.ZeldaStates import *
 import pickle
+import uuid
 class GVGAgent():
     def __init__(self):
         self.translator = Zelda_Translator()
@@ -15,8 +16,18 @@ class GVGAgent():
     def validate_state(self,state):
         return self.translator.validate_state(state)
 
-    def generate_random_states(self,n=5,save=False):
-        self.translator.random_states = self.translator.random_state_generator(n)
+    def generate_random_states(self,n=5,save=False,abstract = False):
+        random_states = []
+        [random_states.append(self.translator.generate_random_state()) for i in range(n)]
+        abs_random_states = []
+        if abstract:
+            for s in random_states:
+                abs_random_states.append(self.translator.abstract_state(s))
+            random_states = abs_random_states
+        if save:
+            with open("random_states","wb") as f:
+                pickle.dump(random_states,f)
+        return random_states
     
     def get_random_states(self,n=5):
         if n>self.translator.random_states:
@@ -43,14 +54,20 @@ class GVGAgent():
         new_test_traces = []
         for i,run in enumerate(test_trace):
             sas_trace = []
-            first_state = self.translator.from_sso(run[0][0],Zelda_State(trace_id=0))
-            monster_mapping = first_state.monster_mapping
-            for sa1,sa2 in zip(run,run[1:]):
-                zsa1 = self.translator.from_sso(sa1[0],Zelda_State(monster_mapping,trace_id = i))
-                zsa2 = self.translator.from_sso(sa2[0],Zelda_State(monster_mapping,trace_id = i+1))
+            #first_state = self.translator.from_sso(run[0][0],Zelda_State(trace_id=0))
+            #monster_mapping = first_state.monster_mapping
+            for j,(sa1,sa2) in enumerate(zip(run,run[1:])):
+                zsa1 = self.translator.from_sso(sa1[0])
+                zsa2 = self.translator.from_sso(sa2[0])
+                if zsa1.state['has_key'][0] != zsa2.state['has_key'][0]:
+                    print("Here")
                 sas_trace.append([zsa1,sa1[1],zsa2])
                 if sa2[1]=='ACTION_ESCAPE':
                     break
+                #if i == 7 and j>20:
+                #    print(plot_state(zsa1))
+                #    print("----"+str(i)+"--"+str(j))
+                #    print(plot_state(zsa2))
             new_test_traces.append(sas_trace)
 
         high_level_traces = []
@@ -59,14 +76,16 @@ class GVGAgent():
         for trace in new_test_traces:
             abs_trace = []
             for s1,a,s2 in trace:
-                abs_s1 = AbstractZeldaState(s1) 
-                abs_s2 = AbstractZeldaState(s2)
+                abs_s1 = self.translator.abstract_state(s1) 
+                abs_s2 = self.translator.abstract_state(s2)
+                '''
                 print("Abstract State1:"+str(abs_s1))
                 print("Concretized_state1:"+str(self.translator.refine_abstract_state(abs_s1))) 
                 print("-------------") 
                 print("Abstract State2:"+str(abs_s2))
                 print("Concretized_state2:"+str(self.translator.refine_abstract_state(abs_s2))) 
                 print("===============")
+                '''
                 if abs_s1 != abs_s2:
                     #create a new action
                     action_id = uuid.uuid1()
