@@ -121,9 +121,9 @@ class Agent(AbstractPlayer):
         #     action = 'ACTION_ESCAPE'
         print(action)
         self.current_trace.append((sso,action))
-        current_zstate = Zelda_State(sso)
-        previous_zstate = Zelda_State(self.current_trace[-1][0])
-        previous_action = self.current_trace[-1][1]
+        #current_zstate = Zelda_State(sso)
+        #previous_zstate = Zelda_State(self.current_trace[-1][0])
+        #previous_action = self.current_trace[-1][1]
         return action
     
     """

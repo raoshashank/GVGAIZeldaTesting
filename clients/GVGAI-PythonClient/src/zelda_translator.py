@@ -64,6 +64,7 @@ def plot_state(zstate):
         return data.T
     except KeyError:
         pass
+
 class Zelda_Translator(Translator):
     def __init__(self,level_num = 0):
         super().__init__('/home/raoshashank/GVGAI-master/examples/gridphysics','zelda',level_num)   
@@ -87,22 +88,25 @@ class Zelda_Translator(Translator):
         self.high_actions.update(actions)
     
     def create_level_from_state(self,zelda_state,level_file):
+        '''
+            Given zelda state, create GVG level
+        '''
         level_text = ""
         for i in range(zelda_state.grid_height): 
             for j in range(zelda_state.grid_width):
                 cell = 'cell_'+str(j)+'_'+str(i)
-                if cell in zelda_state.predicates['monster']:
+                if cell in zelda_state.state['monster']:
                     level_text+=self.sprites["monsterSlow"]
-                if cell in zelda_state.predicates['wall']:
+                if cell in zelda_state.state['wall']:
                     level_text+=self.sprites['wall']
-                if cell in zelda_state.predicates['player']:
+                if cell in zelda_state.state['player']:
                     if zelda_state['has_key'][0]==True:
                         level_text+=self.sprites["withkey"]
                     else:
                         level_text+=self.sprites["nokey"]
-                if cell in zelda_state.predicates['door']:
+                if cell in zelda_state.state['door']:
                     level_text+=self.sprites["door"]
-                if cell in  zelda_state.predicates['key']:
+                if cell in  zelda_state.state['key']:
                     level_text+=self.sprites["key"]
                 else:
                     level_text+="."
@@ -110,50 +114,62 @@ class Zelda_Translator(Translator):
         with open(level_file,"w") as f:
             f.writelines(level_text)
 
-    def random_state_generator(self,r,c):
+    def generate_random_state(self,r=4,c=4):
         random_state = Zelda_State()
         player_location = 'cell_'+str(np.random.randint(1,c-1))+'_'+str(np.random.randint(1,r-1))
         for i in range(c):
             for j in range(r):
-                cell_name = 'cell_ '+str(i)+'_'+str(j)
-                cell_up = 'cell_ '+str(i)+'_'+str(j-1)
-                cell_down = 'cell_ '+str(i)+'_'+str(j+1)
-                cell_right = 'cell_ '+str(i+1)+'_'+str(j)
-                cell_left = 'cell_ '+str(i-1)+'_'+str(j)
-                random_state.objects.append(cell_name)
+                cell_name = 'cell_'+str(i)+'_'+str(j)
+                cell_up = 'cell_'+str(i)+'_'+str(j-1)
+                cell_down = 'cell_'+str(i)+'_'+str(j+1)
+                cell_right = 'cell_'+str(i+1)+'_'+str(j)
+                cell_left = 'cell_'+str(i-1)+'_'+str(j)
+                random_state.objects[cell_name] = 'location'
                 if i+1<c:
-                    random_state.predicates['leftOf'].append([cell_name,cell_right])
-                    random_state.predicates['rightOf'].append([cell_right,cell_name])
+                    random_state.state['leftOf'].append([cell_name,cell_right])
+                    random_state.state['rightOf'].append([cell_right,cell_name])
                 if j+1<r:
-                    random_state.predicates['above'].append([cell_name,cell_down])
-                    random_state.predicates['below'].append([cell_down,cell_name])
+                    random_state.state['above'].append([cell_name,cell_down])
+                    random_state.state['below'].append([cell_down,cell_name])
                 if i!=0:
-                    random_state.predicates['leftOf'].append([cell_left,cell_name])
-                    random_state.predicates['rightOf'].append([cell_name,cell_right])
+                    random_state.state['leftOf'].append([cell_left,cell_name])
+                    random_state.state['rightOf'].append([cell_name,cell_right])
                 if j!=0:
-                    random_state.predicates['above'].append([[cell_up,cell_name]])
-                    random_state.predicates['below'].append([[cell_name,cell_up]])        
+                    random_state.state['above'].append([[cell_up,cell_name]])
+                    random_state.state['below'].append([[cell_name,cell_up]])        
         
         num_monsters = np.random.randint(2,5)
-        num_blocked_cells = np.random.choice(range(int(3 * c * r / 10)))
-        all_cells = list(random_state.objects)
-        blocked_cells = np.random.sample(all_cells, num_blocked_cells)
-        unblocked_cells = list(set(all_cells).difference(set(blocked_cells)))
-        monster_positions = np.random.sample(unblocked_cells, num_monsters)
-        sprite_positions = np.random.sample(set(unblocked_cells).difference(monster_positions), 3)
-        
-        player_position = sprite_positions[0]
-        key_position = sprite_positions[1]
-        door_position = sprite_positions[2] 
-        
-        clear_cells = list(set(unblocked_cells).difference(set(monster_positions).union(set(sprite_positions))))
-        random_state.predicates['player_orientation'].append(['EAST'])
-        [random_state.predicates['monster'].append(monster_positions[i]) for i in range(len(monster_positions))]
-        [random_state.predicates['wall'].append(blocked_cells[i]) for i in range(len(blocked_cells))]
-        [random_state.predicates['clear'].append(blocked_cells[i]) for i in range(len(clear_cells))]
-        random_state.predicates['player'].append(player_position)
-        random_state.predicates['key'].append(key_position)
-        random_state.predicates['door'].append(door_position)
+        num_blocked_cells = np.random.choice(range(int(5 * c * r / 10)))
+        all_cells = list(random_state.objects.keys())
+
+        #walls
+        blocked_cells = np.random.choice(all_cells, num_blocked_cells)
+        all_cells = list(set(tuple(all_cells)).difference(set(tuple(blocked_cells))))
+        #monster
+        monster_positions = np.random.choice(all_cells, num_monsters)
+        all_cells = list(set(tuple(all_cells)).difference(set(tuple(monster_positions))))
+        monster_mapping = {}
+        for i in range(len(monster_positions)):
+            monster_mapping[monster_positions[i].replace('cell','monster')] = monster_positions[i]
+        #door
+        door_position = np.random.choice(all_cells)
+        all_cells.remove(door_position)
+        #key
+        key_position = np.random.choice(all_cells)
+        all_cells.remove(key_position)
+        #player
+        player_position = np.random.choice(all_cells)
+        all_cells.remove(player_position)
+        random_state.monster_mapping = monster_mapping 
+        random_state.state['player_orientation'] =['EAST']
+        [random_state.state['monster'].append([k,v]) for k,v in monster_mapping.items()]
+        [random_state.state['wall'].append(blocked_cells[i]) for i in range(len(blocked_cells))]
+        #[random_state.state['clear'].append(blocked_cells[i]) for i in range(len(clear_cells))]
+        random_state.state['player'].append(player_position)
+        random_state.state['key'].append(key_position)
+        random_state.state['door'].append(door_position)
+        random_state.state['has_key'] = [False]
+        random_state.state['escaped'] = [False]
         
         return random_state
 
@@ -192,11 +208,8 @@ class Zelda_Translator(Translator):
                 'SOUTH': cell_down
             }
             facing_cell = d[current_orientation] #cell the player is facing
-            if len(state.state['key'])!=0: ##CHECK
-                key_cell = state.state['key'][0]
-            else:
-                key_cell = None
-            door_cell = state.state['door'][0]
+            keys = state.state['key']
+            doors = state.state['door']
         except KeyError:
             print("Something wrong with state!")
         '''
@@ -243,11 +256,11 @@ class Zelda_Translator(Translator):
             else:
                 return state
         
-        if current_position == key_cell:
-            next_state.state['key'] = [] ##CHECK
+        if current_position in keys:
+            next_state.state['key'].remove(current_position)
             next_state.state['has_key'] = [True]
 
-        if current_position == door_cell and len(state.state['monster'])==0 and state.state['has_key'][0]==True:
+        if current_position in doors and len(state.state['monster'])==0 and state.state['has_key'][0]==True:
             next_state.state['escaped'] = [True]
 
         return next_state
@@ -302,6 +315,7 @@ class Zelda_Translator(Translator):
 
     def validate_state(self,zstate):
         '''
+            Given ABSTRACT STATE, validate it
             assuming cell positioning is correct already, those are not to be learnt anyway
         '''
         x_axis_size = zstate.grid_height
@@ -311,8 +325,8 @@ class Zelda_Translator(Translator):
         sprites = []
         alive_monsters  = zstate.state['monster_alive']
         monsters = zstate.state['is_monster']           
-        #doors = zstate.state['is_door'] #There can be multiple doors
-        #keys = zstate.state['is_key']    #There can be multiple keys
+        doors = zstate.state['is_door'] #There can be multiple doors
+        keys = zstate.state['is_key']    #There can be multiple keys
         if len(zstate.state['is_player'])>1:
             return False    
         player = zstate.state['is_player'][0]
@@ -320,9 +334,8 @@ class Zelda_Translator(Translator):
             1 cell assigned to only 1 sprite + wall -(player+door)
         '''
         cell_assigned = []
-        doors = []
-        for key,val in zstate.state['at']:
-            [cell_assigned.append(cell) for cell in val]
+        doors = []        
+        [cell_assigned.append(pair[1]) for pair in zstate.state['at']]
         [cell_assigned.append(cell) for cell in zstate.state['wall']]
         player_and_door = False
         for cell in cell_assigned:
@@ -338,12 +351,17 @@ class Zelda_Translator(Translator):
                     return False
         '''
             match monster_alive, is_monster and at(monster,_)
-        '''            
-        for monster,location in zstate.state['at']['monster']:
-            if monster not in monsters or monster not in zstate.state['monster_alive']:
-                return False
+        '''         
+        if len(set(tuple(zstate.state['monster_alive'])).difference(set(tuple(zstate.state['is_monster']))))>0:
+            return False
+        for pair in zstate.state['at']:
+            if pair[0] in monsters:
+                if pair[0] not in zstate.state['monster_alive']:
+                    return False
+
+        #Add check if key is missing, has_key should be true
         
-        if True in zstate.state['escaped'][0]:
+        if True in zstate.state['escaped']:
             if alive_monsters>0:
                 return False
             if True not in zstate.state['has_key']:
@@ -403,6 +421,60 @@ class Zelda_Translator(Translator):
             s+='\n'
         return data.T
     
+    def abstract_state(self,low_state):
+        abs_state = AbstractZeldaState()
+        for obj in low_state.objects:
+            if low_state.objects[obj] in ['location']:
+                abs_state.objects[obj]=low_state.objects[obj]
+        abs_state.state['leftOf'] = low_state.state['leftOf']
+        abs_state.state['rightOf'] = low_state.state['rightOf']
+        abs_state.state['above'] = low_state.state['above']
+        abs_state.state['below'] = low_state.state['below']
+        abs_state.state['wall'] = low_state.state['wall']
+        abs_state.state['escaped'] = low_state.state['escaped']
+        try:
+            abs_state.state['at'].append(('player',low_state.state['player']))
+            abs_state.objects['player']='sprite'
+            abs_state.state['is_player'].append('player')
+        except IndexError:
+            # if len(low_state.state['sword'])==1: #REMOVE DEPENDENCY ON SWORD!
+            #     #print("No player in low level state, but sword is there")
+            #     abs_state.state['at'].append(('player',low_state.state['sword'][0]))
+            # else:
+            print("No player, no sword. this is foul play")
+            pass
+        try:
+            #abs_state.state['at'].append(('key',low_state.state['key']))#assuming there's just one
+            #abs_state.state['is_key'].append('key')
+            for i,val in enumerate(low_state.state['key']):
+                abs_state.objects['key'+str(i)]='sprite'
+                abs_state.state['is_key'].append('key'+str(i))
+                abs_state.state['at'].append(('key'+str(i),val))
+        except IndexError:
+            print("No key in low level state")
+            pass
+        for pair in low_state.state['monster']:
+            abs_state.state['at'].append((pair[0],pair[1]))
+            abs_state.state['monster_alive'].append(pair[0])
+            abs_state.state['is_monster'].append(pair[0])
+            abs_state.objects[pair[0]]='sprite'
+        try:
+            for i,val in enumerate(low_state.state['door']):
+                abs_state.objects['door'+str(i)]='sprite'
+                abs_state.state['is_door'].append('door'+str(i))
+                abs_state.state['at'].append(('door'+str(i),val))
+        except IndexError:
+            print("No door in low level state WHAT?!")
+            pass
+        try:
+            abs_state.state['has_key'].append(low_state.state['has_key'][0])
+        except IndexError:
+            print("No has_key in low level state")
+            pass
+        abs_state.grid_height = low_state.grid_height 
+        abs_state.grid_width = low_state.grid_width
+        return abs_state
+
     def generate_ds(self):
         '''
             assume the actions are assigned
@@ -421,10 +493,9 @@ class Zelda_Translator(Translator):
             with open("test_trace","rb") as f:
                 temp_traces = pickle.load(f)
             sso_state = temp_traces[-1][0][0]
-            zstate = Zelda_State(sso_state)
-            for key,val in zstate.objects.items():
+            state = AbstractZeldaState(self.from_sso(sso_state))
+            for key,val in state.objects.items():
                 objects[val].append(key)
-            init_state = copy.deepcopy(zstate)
         except IOError:
             pass
         
@@ -435,6 +506,8 @@ class Zelda_Translator(Translator):
             'escaped' : [],
             'wall' : ['location'],
 	        'is_player' : ['sprite'],
+            'is_key': ['sprite'],
+            'is_door':['sprite'],
 	        'is_monster': ['sprite'],
             'leftOf': ['location','location'],
             'rightOf': ['location','location'],
@@ -455,6 +528,140 @@ class Zelda_Translator(Translator):
         
         return action_parameters, predTypeMapping, agent_model, abstract_model, objects, None , None, "zelda_GVG"
 
+    def refine_abstract_state(abstract_state):
+        '''
+            This will only be used for setting initial state for a query
+            TODO:
+                add to 'key' and 'door' predicates -- DONE -- 
+                
+        '''
+        for obj in abstract_state.objects:
+            if abstract_state.objects[obj] in ['location']:
+                self.objects[obj]=abstract_state.objects[obj]
+        refined_state = Zelda_State()        
+        refined_state.state['has_key'].append(abstract_state.state['has_key'][0])
+        refined_state.state['wall'] = abstract_state.state['wall']
+        refined_state.state['leftOf'] = abstract_state.state['leftOf']
+        refined_state.state['rightOf'] = abstract_state.state['rightOf']
+        refined_state.state['above'] = abstract_state.state['above']
+        refined_state.state['below'] = abstract_state.state['below']
+        refined_state.state['player_orientation'].append('EAST')
+        refined_state.state['escaped'] = abstract_state.state['escaped']
+        for pair in abstract_state.state['at']:
+            if pair[0] in abstract_state.state['is_player']:
+                refined_state.state['player'].append(pair[1])
+                #refined_state.objects[pair[0]]='sprite'
+            if pair[0] in abstract_state.state['is_key']:
+                refined_state.state['key'].append(pair[1])
+                #refined_state.objects[pair[0]]='sprite'
+            if pair[0] in abstract_state.state['is_door']:
+                refined_state.state['door'].append(pair[1])
+                #refined_state.objects[pair[0]]='sprite'
+            if pair[0] in abstract_state.state['is_monster']:
+                refined_state.state["monster"].append([pair[0],pair[1]])
+                #refined_state.objects[pair[0]]='sprite'
+        refined_state.grid_height = abstract_state.grid_height
+        refined_state.grid_width = abstract_state.grid_width
+        return refined_state
+
+    def from_sso(self,sso):
+        '''
+            Convert Serialized state observation into relational interpretable state
+            predicates:
+                wall(?cell)
+                player(?cell)
+                player_orientation(?direction)
+                monster(?cell)
+                key(?cell)
+                door(?cell)
+                has_key()
+                leftOf(?cell1,?cell2) #cell1 is left of cell2 
+                rightOf(?cell1,?cell2) #cell1 is right of cell2
+                above(?cell1,?cell2) #cell1 is above cell2
+                below(?cell1,?cell2)   #cell1 is below cell2
+                monster_alive()                    
+        '''
+        state = ZeldaStates()
+        state.grid_width = len(sso.observationGrid)
+        state.grid_height = len(sso.observationGrid[0]) ##(i,j) is column i, row jprint_grid = np.zeros([len(sso.observationGrid),len(sso.observationGrid[0])])
+        sword_at = None
+        monster_id = 0
+        player_won = 0
+        player = 0
+        if sso.gameWinner == 'PLAYER_WINS':
+            player_won = 1
+        for i in range(state.grid_width):
+            for j in range(state.grid_height):
+                cell_name = 'cell_'+str(i)+'_'+str(j)
+                cell_up = 'cell_'+str(i)+'_'+str(j-1)
+                cell_down = 'cell_'+str(i)+'_'+str(j+1)
+                cell_right = 'cell_'+str(i+1)+'_'+str(j)
+                cell_left = 'cell_'+str(i-1)+'_'+str(j)
+                state.objects[cell_name]='location' 
+                if i+1<state.grid_width:
+                    state.state['leftOf'].append([cell_name,cell_right])
+                    state.state['rightOf'].append([cell_right,cell_name])
+                if j+1<state.grid_height:
+                    state.state['above'].append([cell_name,cell_down])
+                    state.state['below'].append([cell_down,cell_name])
+                if i!=0:
+                    state.state['leftOf'].append([cell_left,cell_name])
+                    state.state['rightOf'].append([cell_name,cell_right])
+                if j!=0:
+                    state.state['above'].append([[cell_up,cell_name]])
+                    state.state['below'].append([[cell_name,cell_up]])
+                if sso.observationGrid[i][j][0]!=None:
+                    if sso.observationGrid[i][j][0].itype not in IDs.keys():
+                        print("Problem in zelda_translator")
+                        pass
+                    else:
+                        if IDs[sso.observationGrid[i][j][0].itype] == 'MONSTER':  
+                            if state.trace_id==0:
+                                #assign monster numbers here itself
+                                state.state['monster'].append(['monster'+str(monster_id),cell_name])
+                                state.monster_mapping[cell_name] = 'monster'+str(monster_id)
+                                monster_id+=1
+                                #state.objects['monster'+str(monster_id)]='sprite'
+                            else:
+                                try:
+                                    state.state['monster'].append([state.monster_mapping[cell_name],cell_name])
+                                except KeyError:
+                                    print("Monster not present in mapping!")
+                        if IDs[sso.observationGrid[i][j][0].itype] == 'WALL':
+                            state.state['wall'].append(cell_name)
+                        if IDs[sso.observationGrid[i][j][0].itype] == 'PLAYER':
+                            state.state['player'].append(cell_name)
+                        if IDs[sso.observationGrid[i][j][0].itype] == 'DOOR':
+                            state.state['door'].append(cell_name)
+                        if IDs[sso.observationGrid[i][j][0].itype] == 'KEY':
+                            state.state['key'].append(cell_name)
+                        if IDs[sso.observationGrid[i][j][0].itype] == 'PLAYER_WITH_KEY':
+                            state.state['player'].append(cell_name)
+                            state.state['has_key'].append(True)
+                        if IDs[sso.observationGrid[i][j][0].itype] == 'SWORD':
+                             #state.state['sword'].append(cell_name)
+                             sword_at = cell_name
+                # else:
+                #     state.state['clear'].append(cell_name)
+        if len(state.state['has_key']) == 0:
+            state.state['has_key'].append(False)
+        if sso.avatarOrientation == [-1,0]:
+            state.state['player_orientation'].append('WEST')
+        if sso.avatarOrientation == [1,0]:
+            state.state['player_orientation'].append('EAST')
+        if sso.avatarOrientation == [0,-1]:
+            state.state['player_orientation'].append('NORTH')
+        if sso.avatarOrientation == [0,1]:
+            state.state['player_orientation'].append('SOUTH')
+        if len(state.state['player'])==0:
+            state.state['player'].append(sword_at)    
+        if player_won:
+            #move player to door location and make escaped true
+            state.state['player']=state.state['door']
+            state.state['escaped'] = [True]        
+        
+        return state
+    
     def iaa_query(self,abs_state,plan):
         '''
         state: abstract

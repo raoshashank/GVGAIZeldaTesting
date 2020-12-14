@@ -19,6 +19,7 @@ import os
 from priority_queue import PriorityQueue
 import time
 #from src.ZeldaStates import is_invalid
+from src.zelda_translator import plot_state
 
 
 def build_solution(best_path, current_node):
@@ -113,8 +114,9 @@ def search(init_state, goal_state, helper, algorithm, time_limit=float("inf")):
         
         # If the current state is a goal state, we are done and need to
         # reconstruct the best path to the goal.
+        print("-----")
+        print(plot_state(current_state))
         if helper.is_goal_state(current_state, goal_state):
-        
             action_list = build_solution(best_path, current_node)
             break
 

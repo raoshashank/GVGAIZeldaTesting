@@ -42,16 +42,19 @@ def zelda_agent():
 
 def test_search(state1,state2):
     translator = Zelda_Translator()
-    action_list,total_nodes_expanded = translator.plan_to_state(state1,state2,"astar")
+    print("FROM:")
+    print(plot_state(state1))
+    print("TO:")
     print(plot_state(state2))
+    action_list,total_nodes_expanded = translator.plan_to_state(state1,state2,"astar")
     print("Plan:"+str(action_list))
     # for action in action_dict:
     #     print(action)
     #     print(plot_state(action_dict[action][1]))
 
-def test_get_successor(state1,action):
+def test_get_successor(state1):
     translator = Zelda_Translator()
-    return translator.get_successor(state1,action)
+    return translator.get_successor(state1)
     
 def test_iaa_query(state,plan,stored_actions):
     '''
@@ -126,8 +129,8 @@ def test_plan_run(high_level_trace,high_level_actions):
     translator = Zelda_Translator()
     translator.update_high_actions(high_level_actions)
     
-    action_parameters, predTypeMapping, agent_model, abstract_model, objects, _ , init_state, name = translator.generate_ds()
-    print("Hello")
+    #action_parameters, predTypeMapping, agent_model, abstract_model, objects, _ , init_state, name = translator.generate_ds()
+    #print("Hello")
 
     success,plan_length,final_state = translator.iaa_query(state,actions)
     return success,plan_length,final_state
@@ -136,8 +139,14 @@ def test_set_GVG_state(state):
     translator = Zelda_Translator()
     translator.set_GVG_state(state)
 
+def test_random_generator(n=5):
+    translator = Zelda_Translator()
+    random_states = []
+    for i in range(n):
+        random_states.append(translator.generate_random_state())
+
 if __name__ == '__main__':
-    #zelda_agent()
+    test_random_generator(5)
     test_trace = "test_trace"
     try:
         with open(test_trace,'rb') as f:
@@ -146,34 +155,33 @@ if __name__ == '__main__':
         pass
     
     high_level_actions,high_level_traces = save_action_dict()
-    import IPython
     trace = high_level_traces[-1]
     
-    success,plan_length,final_state = test_plan_run(trace,high_level_actions) #Next check for impossible plansd
-    print(success)
-    print(plan_length)
-    print(len(trace))
-    print(plot_state(final_state))
-    IPython.embed()
-
+    #success,plan_length,final_state = test_plan_run(trace,high_level_actions) #Next check for impossible plans
+    #print(success)
+    #print(plan_length)
+    #print(len(trace))
+    #print(plot_state(final_state))
+    #IPython.embed()
     #test_set_GVG_state(trace[-1][0])
-    state1 = test_trace[-1][0][0]
-    state2 = test_trace[-1][1][0]
+    state1 = test_trace[-1][8][0]
+    state2 = test_trace[-1][10][0]
     all_actions = state1.availableActions
     zstate1 = Zelda_State(state1)
-    zstate2 = Zelda_State(test_trace[-1][10][0])
-    print(plot_state(zstate1))
-    print(plot_state(zstate2))
-    
-    
-    
+    zstate2 = Zelda_State(state2)
+    #print(plot_state(zstate1))
+    #print(plot_state(zstate2))
     test_search(zstate1,zstate2)
+    p = 0
     for i,sa in enumerate(test_trace[-1]):
-         #zstate = test_get_successor(zstate,sa[1])
-         print("from")
-         print(plot_state(zstate1))
-         print("to")
-         test_search(zstate1,Zelda_State(test_trace[-1][i][0]))
-         #print("Resulting State from action "+str(sa[1]))
-         
+        #zstate = test_get_successor(zstate,sa[1])
+        if i < 2:
+            p = 2
+        else:
+            p = i
+        s1 = Zelda_State(test_trace[-1][p-2][0])
+        s2 = Zelda_State(test_trace[-1][i][0])
+        test_search(s1,s2)
+        #print("Resulting State from action "+str(sa[1]))
+        
 

@@ -33,7 +33,6 @@ class GVGAgent():
             print("Actions not stored yet")
             return False
 
-
     def load_actions(self,file="test_trace"):
         try:
             with open(file,'rb') as f:
@@ -44,10 +43,12 @@ class GVGAgent():
         new_test_traces = []
         for i,run in enumerate(test_trace):
             sas_trace = []
-            first_state = Zelda_State(run[0][0],trace_id=0)
+            first_state = self.translator.from_sso(run[0][0],Zelda_State(trace_id=0))
             monster_mapping = first_state.monster_mapping
             for sa1,sa2 in zip(run,run[1:]):
-                sas_trace.append([Zelda_State(sa1[0],monster_mapping,trace_id = i),sa1[1],Zelda_State(sa2[0],monster_mapping,trace_id = i+1)])
+                zsa1 = self.translator.from_sso(sa1[0],Zelda_State(monster_mapping,trace_id = i))
+                zsa2 = self.translator.from_sso(sa2[0],Zelda_State(monster_mapping,trace_id = i+1))
+                sas_trace.append([zsa1,sa1[1],zsa2])
                 if sa2[1]=='ACTION_ESCAPE':
                     break
             new_test_traces.append(sas_trace)
@@ -61,10 +62,10 @@ class GVGAgent():
                 abs_s1 = AbstractZeldaState(s1) 
                 abs_s2 = AbstractZeldaState(s2)
                 print("Abstract State1:"+str(abs_s1))
-                print("Concretized_state1:"+str(Zelda_State().refine_abstract_state(abs_s1))) 
+                print("Concretized_state1:"+str(self.translator.refine_abstract_state(abs_s1))) 
                 print("-------------") 
                 print("Abstract State2:"+str(abs_s2))
-                print("Concretized_state2:"+str(Zelda_State().refine_abstract_state(abs_s2))) 
+                print("Concretized_state2:"+str(self.translator.refine_abstract_state(abs_s2))) 
                 print("===============")
                 if abs_s1 != abs_s2:
                     #create a new action
